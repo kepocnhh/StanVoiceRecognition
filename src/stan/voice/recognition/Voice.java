@@ -22,28 +22,6 @@ public class Voice
 		voice = new VoiceRecognition(this);
 	}
 
-	public static void main(String[] args)
-	{
-		System.out.println("Voice");
-		Voice voice = new Voice(new IResponseListener()
-		{
-			@Override
-	        public void getSpeech(GoogleResponse deserialized)
-	        {
-
-	        }
-			@Override
-	        public void audioLevel(int al)
-	        {
-	        	
-	        }
-		});
-		voice.startRecognize();
-		System.out.println("startRecognize");
-		voice.stopRecognize();
-		System.out.println("stopRecognize");
-	}
-
 	@Override
     public void getAudioLevel(int al)
     {

@@ -7,18 +7,21 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.TargetDataLine;
+import java.io.ByteArrayOutputStream;
 
 public class Micro
 {
     public interface IMicroListener
     {
-        void getAudioLevel(int al);
+        void getAudioLevel(int audiolevel);
         void toRecognize(byte[] data);
     }
 
     private int TALK_RANG = 6;
+    private int TALK_VOLUME = 500;
     private List<byte[]> buffer;
     private TargetDataLine microphone;
+    private Thread runnable;
     private IMicroListener microListener;
 
 	public Micro(IMicroListener ml)
@@ -26,7 +29,6 @@ public class Micro
 		microListener = ml;
 		AudioFormat format = new AudioFormat(3200, 16, 1, true, true);
 	    DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-	    // microphone = AudioSystem.getTargetDataLine(format);
 	    try
 	    {
 		    microphone = (TargetDataLine)AudioSystem.getLine(info);
@@ -37,10 +39,14 @@ public class Micro
 	    	
 	    }
 	}
-    private int getAudioLevel(byte[] buf)
+    private int getAudioLevel(byte[] data)
     {
         int lvl = 0;
-        //TODO calculate audiolevel
+        for (int index = 0; index < data.length; index++)
+        {
+            short sample = (short)((data[index] << 8) | data[index]);
+            lvl += (int)Math.abs(sample / 2768f);
+        }
         return lvl;
     }
     private int getRecordLevel()
@@ -51,24 +57,65 @@ public class Micro
     {
         return (getRecordLevel() / TALK_RANG) * TALK_RANG == getRecordLevel();
     }
+    private byte[] prepareVoice()
+    {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (int i = 0; i < buffer.size(); i++)
+        {
+            try
+            {
+                outputStream.write(buffer.get(i));
+            }
+            catch(Exception e)
+            {
+
+            }
+        }
+        return outputStream.toByteArray();
+    }
     public void startRecording()
     {
         microphone.start();
         buffer = new ArrayList<>();
-	    byte[] data = new byte[microphone.getBufferSize()/5];
-	    int numBytesRead;
-        int bytesRead = 0;
-        while(bytesRead<100000)
+        runnable = new Thread(new Runnable()
         {
-        	numBytesRead = microphone.read(data, 0, data.length);
-            bytesRead += numBytesRead;
-            // out.write(data, 0, numBytesRead);
+            public void run()
+            {
+                while(true)
+                {
+                    readMicrophoneData();
+                }
+            }
+        });
+        runnable.start();
+    }
+    public void readMicrophoneData()
+    {
+        byte[] data = new byte[microphone.getBufferSize()/5];
+        microphone.read(data, 0, data.length);
+        int audiolevel = getAudioLevel(data);
+        microListener.getAudioLevel(audiolevel);
+        if (audiolevel > TALK_VOLUME)
+        {
+            buffer.add(data);
+            if (checkReady())
+            {
+                microListener.toRecognize(prepareVoice());
+            }
         }
-        stopRecording();
+        else
+        {
+            if (getRecordLevel() > 0)
+            {
+                microListener.toRecognize(prepareVoice());
+                buffer.clear();
+            }
+        }
     }
     public void stopRecording()
     {
         microphone.close();
+        runnable.stop();
         buffer = null;
     }
 }
