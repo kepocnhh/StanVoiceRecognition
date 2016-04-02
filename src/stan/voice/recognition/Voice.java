@@ -15,11 +15,11 @@ public class Voice
 	private VoiceRecognition voice;
 	private IResponseListener responseListener;
 
-	public Voice(IResponseListener rl)
+	public Voice(IResponseListener rl, String ak)
 	{
 		responseListener = rl;
 		micro = new Micro(this);
-		voice = new VoiceRecognition(this);
+		voice = new VoiceRecognition(this, ak);
 	}
 
 	@Override

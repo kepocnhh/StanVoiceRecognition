@@ -17,7 +17,7 @@ public class Micro
         void toRecognize(byte[] data);
     }
 
-    private int TALK_RANG = 6;
+    private int TALK_RANG = 10;
     private int TALK_VOLUME = 500;
     private List<byte[]> buffer;
     private TargetDataLine microphone;
@@ -27,7 +27,7 @@ public class Micro
 	public Micro(IMicroListener ml)
 	{
 		microListener = ml;
-		AudioFormat format = new AudioFormat(3200, 16, 1, true, true);
+		AudioFormat format = getAudioFormat();
 	    DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 	    try
 	    {
@@ -39,6 +39,20 @@ public class Micro
 	    	
 	    }
 	}
+    public AudioFormat getAudioFormat()
+    {
+        float sampleRate = 8000.0F;
+        //8000,11025,16000,22050,44100
+        int sampleSizeInBits = 16;
+        //8,16
+        int channels = 1;
+        //1,2
+        boolean signed = true;
+        //true,false
+        boolean bigEndian = false;
+        //true,false
+        return new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+    }
     private int getAudioLevel(byte[] data)
     {
         int lvl = 0;
