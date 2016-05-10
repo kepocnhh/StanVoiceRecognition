@@ -24,21 +24,20 @@ public class Micro
     private Thread runnable;
     private IMicroListener microListener;
 
-	public Micro(IMicroListener ml)
-	{
-		microListener = ml;
-		AudioFormat format = getAudioFormat();
-	    DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-	    try
-	    {
-		    microphone = (TargetDataLine)AudioSystem.getLine(info);
-		    microphone.open(format);
-	    }
-	    catch(Exception e)
-	    {
-	    	
-	    }
-	}
+    public Micro(IMicroListener ml)
+    {
+        microListener = ml;
+        AudioFormat format = getAudioFormat();
+        DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+        try
+        {
+            microphone = (TargetDataLine)AudioSystem.getLine(info);
+            microphone.open(format);
+        }
+        catch(Exception e)
+        {
+        }
+    }
     public AudioFormat getAudioFormat()
     {
         float sampleRate = 8000.0F;
@@ -56,7 +55,7 @@ public class Micro
     private int getAudioLevel(byte[] data)
     {
         int lvl = 0;
-        for (int index = 0; index < data.length; index++)
+        for(int index = 0; index < data.length; index++)
         {
             short sample = (short)((data[index] << 8) | data[index]);
             lvl += (int)Math.abs(sample / 2768f);
@@ -74,7 +73,7 @@ public class Micro
     private byte[] prepareVoice()
     {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        for (int i = 0; i < buffer.size(); i++)
+        for(int i = 0; i < buffer.size(); i++)
         {
             try
             {
@@ -82,7 +81,6 @@ public class Micro
             }
             catch(Exception e)
             {
-
             }
         }
         return outputStream.toByteArray();
@@ -105,21 +103,21 @@ public class Micro
     }
     public void readMicrophoneData()
     {
-        byte[] data = new byte[microphone.getBufferSize()/5];
+        byte[] data = new byte[microphone.getBufferSize() / 5];
         microphone.read(data, 0, data.length);
         int audiolevel = getAudioLevel(data);
         microListener.getAudioLevel(audiolevel);
-        if (audiolevel > TALK_VOLUME)
+        if(audiolevel > TALK_VOLUME)
         {
             buffer.add(data);
-            if (checkReady())
+            if(checkReady())
             {
                 microListener.toRecognize(prepareVoice());
             }
         }
         else
         {
-            if (getRecordLevel() > 0)
+            if(getRecordLevel() > 0)
             {
                 microListener.toRecognize(prepareVoice());
                 buffer.clear();
@@ -128,7 +126,9 @@ public class Micro
     }
     public void stopRecording()
     {
-        microphone.close();
+        microphone.stop();
+        microphone.flush();
+        //microphone.close();
         runnable.stop();
         buffer = null;
     }
