@@ -1,5 +1,7 @@
 package stan.voice.recognition;
 
+import javax.sound.sampled.LineUnavailableException;
+
 import stan.voice.recognition.google.response.GoogleResponse;
 
 public class Voice
@@ -42,7 +44,12 @@ public class Voice
     }
 
     public void startRecognize()
+        throws LineUnavailableException
     {
+    	if(!micro.isInit())
+    	{
+        	micro.initMicrophone();
+    	}
         micro.startRecording();
     }
     public void stopRecognize()

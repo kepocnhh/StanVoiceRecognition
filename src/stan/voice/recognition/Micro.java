@@ -1,13 +1,14 @@
 package stan.voice.recognition;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.ArrayList;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
-import java.io.ByteArrayOutputStream;
 
 public class Micro
 {
@@ -18,25 +19,39 @@ public class Micro
     }
 
     private int TALK_RANG = 10;
-    private int TALK_VOLUME = 500;
+    private int TALK_VOLUME = 2000;
     private List<byte[]> buffer;
     private TargetDataLine microphone;
     private Thread runnable;
     private IMicroListener microListener;
+    private boolean isInit;
+    private boolean isStarted;
 
     public Micro(IMicroListener ml)
     {
         microListener = ml;
+    }
+    public void initTalkRangVolume(int r, int v)
+    {
+        TALK_RANG = r;
+        TALK_VOLUME = v;
+    }
+    public void initMicrophone()
+        throws LineUnavailableException
+    {
         AudioFormat format = getAudioFormat();
         DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
-        try
-        {
-            microphone = (TargetDataLine)AudioSystem.getLine(info);
-            microphone.open(format);
-        }
-        catch(Exception e)
-        {
-        }
+        microphone = (TargetDataLine)AudioSystem.getLine(info);
+        microphone.open(format);
+        isInit = true;
+    }
+    public boolean isInit()
+    {
+        return isInit;
+    }
+    public boolean isStarted()
+    {
+        return isStarted;
     }
     public AudioFormat getAudioFormat()
     {
@@ -87,6 +102,10 @@ public class Micro
     }
     public void startRecording()
     {
+        if(isStarted)
+        {
+            return;
+        }
         microphone.start();
         buffer = new ArrayList<>();
         runnable = new Thread(new Runnable()
@@ -100,6 +119,7 @@ public class Micro
             }
         });
         runnable.start();
+        isStarted = true;
     }
     public void readMicrophoneData()
     {
@@ -126,10 +146,13 @@ public class Micro
     }
     public void stopRecording()
     {
+        runnable.stop();
         microphone.stop();
         microphone.flush();
-        //microphone.close();
-        runnable.stop();
+        microphone.close();
+        microphone = null;
         buffer = null;
+        isInit = false;
+        isStarted = false;
     }
 }
