@@ -2,8 +2,6 @@ package stan.voice.recognition;
 
 import javax.sound.sampled.LineUnavailableException;
 
-import stan.voice.recognition.google.response.GoogleResponse;
-
 public class Voice
 	implements Micro.IMicroListener, VoiceRecognition.IRecognitionListener
 {
@@ -38,9 +36,14 @@ public class Voice
 	@Override
     public void getResponse(String response)
     {
-    	GoogleResponse deserialized = null;
+    	GoogleResponse deserialized = deSerialize(response);
     	//TODO deserialized GoogleResponse object
         responseListener.getSpeech(deserialized);
+    }
+	
+    public GoogleResponse deSerialize(String response)
+    {
+		return null;
     }
 
     public void startRecognize()
@@ -54,6 +57,9 @@ public class Voice
     }
     public void stopRecognize()
     {
-        micro.stopRecording();
+		if(micro != null && micro.isInit())
+		{
+			micro.stopRecording();
+		}
     }
 }

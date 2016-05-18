@@ -31,7 +31,7 @@ public class Micro
     {
         microListener = ml;
     }
-    public void initTalkRangVolume(int r, int v)
+    public void setTalkRangVolume(int r, int v)
     {
         TALK_RANG = r;
         TALK_VOLUME = v;
